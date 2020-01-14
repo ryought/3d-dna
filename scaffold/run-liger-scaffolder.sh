@@ -104,12 +104,13 @@ fi
 
 path_to_scripts=`cd "$( dirname $0)" && pwd`
 
-scrape_contacts_script="$path_to_scripts""/scrape-mnd.awk"
-merge_scores_script="$path_to_scripts""/merge-scores.awk"
+scrape_contacts_script="$path_to_scripts""/scrape-mnd-prob.awk"
+merge_scores_script="$path_to_scripts""/merge-scores-prob.awk"
 compute_confidences_script="$path_to_scripts""/generate-unsorted-confidence-table.awk"
 accept_links_script="$path_to_scripts""/confidence-to-assembly.awk"
 update_assembly_script="$path_to_scripts""/scaffolds-to-original-notation.awk"
 drop_dubious_script="$path_to_scripts""/drop-smallest-dubious-element.awk"
+infer_distribution_script="$path_to_scripts""/infer-distribution.py"
 
 
 if [ ! -f $scrape_contacts_script ] || [ ! -f $merge_scores_script ] || [ ! -f $compute_confidences_script ] || [ ! -f $accept_links_script ] || [ ! -f $update_assembly_script ] || [ ! -f $drop_dubious_script ]; then
@@ -126,6 +127,13 @@ else
 	echo "...Explicit scaffold set has been listed as input. Using set as a first iteration."
 fi
 
+# python infer-distribution.py hoge.mnd 1000 100000
+K0=3500
+K=75000
+/work/ryought/tools/anaconda3/bin/python $infer_distribution_script $mergelib $K $K0 > param
+P0=$(sed -n 1p param)
+P1=$(sed -n 2p param)
+
 STEP=1
 echo "...Starting iteration # $STEP"
 
@@ -141,11 +149,11 @@ while true; do
 
     #extract, relable and count reads from merged-nodups [TODO: rethink this part once mnd is deprecated]
 	if [ $use_parallel == true ]; then
-		parallel -a $mergelib --will-cite --jobs 80% --pipepart --block 1G "gawk -v MAPQ=$MAPQ -f $scrape_contacts_script $contigPropFile h.scaffolds.original.notation.step.$(($STEP-1)).txt - " | LC_ALL=C sort -k1,1 -k2,2 -k3,3n -s | gawk -f ${merge_scores_script} $contigPropFile "h.scaffolds.original.notation.step.""$(($STEP-1))"".txt" - > "h.scores.step.""$STEP"".txt"
+		parallel -a $mergelib --will-cite --jobs 80% --pipepart --block 1G "gawk -v MAPQ=$MAPQ -v P0="$P0" -v P1="$P1" -v K="$K" -v K0="$K0" -f $scrape_contacts_script $contigPropFile h.scaffolds.original.notation.step.$(($STEP-1)).txt - " | LC_ALL=C sort -k1,1 -k2,2 -k3,3n -s | gawk -v P0="$P0" -v P1="$P1" -v K="$K" -v K0="$K0" -f ${merge_scores_script} $contigPropFile "h.scaffolds.original.notation.step.""$(($STEP-1))"".txt" - > "h.scores.step.""$STEP"".txt"
 	else
-		gawk -v MAPQ="$MAPQ" -f $scrape_contacts_script $contigPropFile "h.scaffolds.original.notation.step.""$(($STEP-1))"".txt" "$mergelib" | gawk -f ${merge_scores_script} $contigPropFile "h.scaffolds.original.notation.step.""$(($STEP-1))"".txt" - > "h.scores.step.""$STEP"".txt"
+    echo 'running prob calcing'
+		gawk -v MAPQ="$MAPQ" -v P0="$P0" -v P1="$P1" -v K="$K" -v K0="$K0" -f $scrape_contacts_script $contigPropFile "h.scaffolds.original.notation.step.""$(($STEP-1))"".txt" "$mergelib" | gawk -v P0="$P0" -v P1="$P1" -v K="$K" -v K0="$K0" -f ${merge_scores_script} $contigPropFile "h.scaffolds.original.notation.step.""$(($STEP-1))"".txt" - > "h.scores.step.""$STEP"".txt"
 	fi
-	    
     #consolidate scrape data into double-sorted-confidence file
     gawk -f $compute_confidences_script "h.scores.step.""$STEP"".txt" | sort -r -gk4 -gk5 -S8G --parallel=48 -s > "h.double.sorted.confidence.step.""$STEP"".txt"
 
