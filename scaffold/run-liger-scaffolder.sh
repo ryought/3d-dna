@@ -174,9 +174,9 @@ while true; do
 
         #try to push further by dropping dubious contigs
 
-        if [ -f "h.dropouts.step.""$STEP"".txt" ]; then
-            rm -f "h.dropouts.step.""$STEP"".txt"
-        fi
+        # if [ -f "h.dropouts.step.""$STEP"".txt" ]; then
+        #     rm -f "h.dropouts.step.""$STEP"".txt"
+        # fi
 
         while true; do
             # Choose the smallest dubious contig to be dropped
@@ -222,7 +222,7 @@ done
 
 
 ## CLEAN LEFTOVER HELPER FILES. TODO: delete some from inside the loop to save space.
-find . -name "h.*.txt" -delete
+# find . -name "h.*.txt" -delete
 
 echo ":) DONE!"
 
