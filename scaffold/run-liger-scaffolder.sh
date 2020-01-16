@@ -111,6 +111,7 @@ accept_links_script="$path_to_scripts""/confidence-to-assembly.awk"
 update_assembly_script="$path_to_scripts""/scaffolds-to-original-notation.awk"
 drop_dubious_script="$path_to_scripts""/drop-smallest-dubious-element.awk"
 infer_distribution_script="$path_to_scripts""/infer-distribution.py"
+make_scores_positive_script="$path_to_scripts""/make-scores-positive.awk"
 
 
 if [ ! -f $scrape_contacts_script ] || [ ! -f $merge_scores_script ] || [ ! -f $compute_confidences_script ] || [ ! -f $accept_links_script ] || [ ! -f $update_assembly_script ] || [ ! -f $drop_dubious_script ]; then
@@ -154,6 +155,10 @@ while true; do
     echo 'running prob calcing'
 		gawk -v MAPQ="$MAPQ" -v P0="$P0" -v P1="$P1" -v K="$K" -v K0="$K0" -f $scrape_contacts_script $contigPropFile "h.scaffolds.original.notation.step.""$(($STEP-1))"".txt" "$mergelib" | gawk -v P0="$P0" -v P1="$P1" -v K="$K" -v K0="$K0" -f ${merge_scores_script} $contigPropFile "h.scaffolds.original.notation.step.""$(($STEP-1))"".txt" - > "h.scores.step.""$STEP"".txt"
 	fi
+    gawk -f ${make_scores_positive_script} "h.scores.step.""$STEP"".txt" "h.scores.step.""$STEP"".txt" > "h.scores.step.""$STEP"".positive.txt"
+    mv "h.scores.step.""$STEP"".txt" "h.scores.step.""$STEP"".txt.original"
+    mv "h.scores.step.""$STEP"".positive.txt" "h.scores.step.""$STEP"".txt"
+
     #consolidate scrape data into double-sorted-confidence file
     gawk -f $compute_confidences_script "h.scores.step.""$STEP"".txt" | sort -r -gk4 -gk5 -S8G --parallel=48 -s > "h.double.sorted.confidence.step.""$STEP"".txt"
 
