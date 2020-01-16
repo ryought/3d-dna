@@ -2,7 +2,7 @@
 #### Written by: OD
 
 # gawk -v P0=-2.148477541013386  -v P1=-0.9848534664777571 -v K0=3162 -v K=75000 -f test.awk test.data
-function p(d)
+function p_slow(d)
 {
   if (d < K0) {
     return P0 + (P1 * log(K0));
@@ -12,9 +12,17 @@ function p(d)
     return P0 + (P1 * log(d));
   }
 }
+function p(d)
+{
+  return (d<K0) ? PK0 : ((d>K) ? PK : P0 + (P1 * log(d)))
+}
 function abs(value)
 {
 	return (value<0?-value:value);
+}
+BEGIN {
+  PK  = P0 + (P1 * log(K))
+  PK0 = P0 + (P1 * log(K0))
 }
 # read in the cprops
 {
@@ -60,6 +68,10 @@ function abs(value)
 		else
 			pos2 = -$7 + shift[$6] + clength[$6] + 1
 
+    # scaffold length
+    slen1 = slength[slist[$2]]
+    slen2 = slength[slist[$6]]
+
     # separation distance
 
 		if (slist[$2] < slist[$6])
@@ -67,21 +79,21 @@ function abs(value)
       # <--->
       count[slist[$2]" "slist[$6]" "1] += 1
       dist = pos1 + pos2
-      prob[slist[$2]" "slist[$6]" "1] += p(d)
+      prob[slist[$2]" "slist[$6]" "1] += p(dist)
 
       # <-<-
       count[slist[$2]" "slist[$6]" "2] += 1
-      dist = pos1 + clength[$6] - pos2
+      dist = pos1 + slen2 - pos2
       prob[slist[$2]" "slist[$6]" "2] += p(dist)
 
       # ->->
       count[slist[$2]" "slist[$6]" "3] += 1
-      dist = clength[$2] - pos1 + pos2
+      dist = slen1 - pos1 + pos2
       prob[slist[$2]" "slist[$6]" "3] += p(dist)
 
       # -><-
       count[slist[$2]" "slist[$6]" "4] += 1
-      dist = clength[$2] - pos1 + clength[$6] - pos2
+      dist = slen1 - pos1 + slen2 - pos2
       prob[slist[$2]" "slist[$6]" "4] += p(dist)
 		}
 		else
@@ -91,15 +103,15 @@ function abs(value)
       prob[slist[$6]" "slist[$2]" "1] += p(dist)
 
       count[slist[$6]" "slist[$2]" "2] += 1
-      dist = pos2 + clength[$2] - pos1
+      dist = pos2 + slen1 - pos1
       prob[slist[$6]" "slist[$2]" "2] += p(dist)
 
       count[slist[$6]" "slist[$2]" "3] += 1
-      dist = clength[$6] - pos2 + pos1
+      dist = slen2 - pos2 + pos1
       prob[slist[$6]" "slist[$2]" "3] += p(dist)
 
       count[slist[$6]" "slist[$2]" "4] += 1
-      dist = clength[$6] - pos2 + clength[$2] - pos1
+      dist = slen2 - pos2 + slen1 - pos1
       prob[slist[$6]" "slist[$2]" "4] += p(dist)
 		}
 	}
