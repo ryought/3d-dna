@@ -112,7 +112,7 @@ update_assembly_script="$path_to_scripts""/scaffolds-to-original-notation.awk"
 drop_dubious_script="$path_to_scripts""/drop-smallest-dubious-element.awk"
 infer_distribution_script="$path_to_scripts""/infer-distribution.py"
 make_scores_positive_script="$path_to_scripts""/make-scores-positive.awk"
-
+concat_scaffolds_script="$path_to_scripts""/concat-scaffolds.awk"
 
 if [ ! -f $scrape_contacts_script ] || [ ! -f $merge_scores_script ] || [ ! -f $compute_confidences_script ] || [ ! -f $accept_links_script ] || [ ! -f $update_assembly_script ] || [ ! -f $drop_dubious_script ]; then
     echo ":( Relevant dependency scripts not found in bin folder. Exiting!" >&2
@@ -149,6 +149,8 @@ while true; do
 	fi
 
     #extract, relable and count reads from merged-nodups [TODO: rethink this part once mnd is deprecated]
+  # TODO modify the threshold
+  K=750000
 	if [ $use_parallel == true ]; then
 		parallel -a $mergelib --will-cite --jobs 80% --pipepart --block 1G "gawk -v MAPQ=$MAPQ -v P0="$P0" -v P1="$P1" -v K="$K" -v K0="$K0" -f $scrape_contacts_script $contigPropFile h.scaffolds.original.notation.step.$(($STEP-1)).txt - " | LC_ALL=C sort -k1,1 -k2,2 -k3,3n -s | gawk -v P0="$P0" -v P1="$P1" -v K="$K" -v K0="$K0" -f ${merge_scores_script} $contigPropFile "h.scaffolds.original.notation.step.""$(($STEP-1))"".txt" - > "h.scores.step.""$STEP"".txt"
 	else
@@ -220,7 +222,9 @@ done
 
 # CONSOLIDATE FINAL OUTPUT
 basenamefile="$(basename $contigPropFile .cprops)"
-cp "h.scaffolds.original.notation.step.""$STEP"".txt" "$basenamefile"".asm"
+# cp "h.scaffolds.original.notation.step.""$STEP"".txt" "$basenamefile"".asm"
+awk -f $concat_scaffolds_script "h.scaffolds.original.notation.step.""$STEP"".txt" > "$basenamefile"".asm"
+
 for i in $(find . -name 'h.dropouts.step.*.txt' | sort -t "." -nr -k 5); do
     cat $i >> "$basenamefile"".asm"
 done
