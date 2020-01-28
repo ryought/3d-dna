@@ -1,6 +1,10 @@
 # concatenate all scaffolds
 {
-  all=all" "$0
+  if (all) {
+    all=all" "$0
+  } else {
+    all=$0
+  }
 }
 END {
   print all
