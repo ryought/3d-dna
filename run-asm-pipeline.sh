@@ -676,6 +676,9 @@ if [ "$stage" != "polish" ] && [ "$stage" != "split" ] && [ "$stage" != "seal" ]
         # scaffold
             echo "...starting round ${ROUND} of scaffolding:" >&1
             bash ${pipeline}/scaffold/run-liger-scaffolder.sh -p ${parallel} -s ${input_size} -q ${mapq} ${current_cprops} ${current_mnd}
+            # save tmp files to hfiles folder
+            mkdir "hfiles_${ROUND}"
+            mv "h.*.txt" "hfiles_${ROUND}/"
             
         # build a hic map of the resulting assembly
             echo "...visualizing round ${ROUND} results:" >&1
