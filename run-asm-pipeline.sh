@@ -678,7 +678,10 @@ if [ "$stage" != "polish" ] && [ "$stage" != "split" ] && [ "$stage" != "seal" ]
             bash ${pipeline}/scaffold/run-liger-scaffolder.sh -p ${parallel} -s ${input_size} -q ${mapq} ${current_cprops} ${current_mnd}
             # save tmp files to hfiles folder
             mkdir "hfiles_${ROUND}"
-            mv "h.*.txt" "hfiles_${ROUND}/"
+            mv h.*.txt "hfiles_${ROUND}/"
+            mv h.*.txt.original "hfiles_${ROUND}/"
+            # find . -name "h.*.txt" -exec mv -t "hfiles_${ROUND}/" {} +
+            # find . -name "h.*.txt.original" -exec mv -t "hfiles_${ROUND}/" {} +
             
         # build a hic map of the resulting assembly
             echo "...visualizing round ${ROUND} results:" >&1
