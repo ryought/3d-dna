@@ -223,15 +223,19 @@ awk -v bin_size=${narrow_bin} -f ${pipeline}/edit/overlay-edits.awk ${current_sc
 mv h.dropouts.step.0.txt do_not_delete.dropouts.step.0.txt
 
 #	6) Run TIGer
-	bash ${pipeline}/scaffold/run-tiger-scaffolder.sh -p ${use_parallel} -q ${mapq} -s ${input_size} ${polish_cprops} ${polish_mnd}
-	polish_asm=`basename ${polish_cprops} .cprops`.asm
+	# bash ${pipeline}/scaffold/run-tiger-scaffolder.sh -p ${use_parallel} -q ${mapq} -s ${input_size} ${polish_cprops} ${polish_mnd}
+	# polish_asm=`basename ${polish_cprops} .cprops`.asm
 
-mv do_not_delete.dropouts.step.0.txt h.dropouts.step.0.txt
-mv ${polish_asm} h.scaffolds.original.notation.step.0.txt
+# mv do_not_delete.dropouts.step.0.txt h.dropouts.step.0.txt
+# mv ${polish_asm} h.scaffolds.original.notation.step.0.txt
 
 #	6) Run LIGer (for things TIGer was not able to join - not necessary, but for megascaffold consistency)
 	bash ${pipeline}/scaffold/run-liger-scaffolder.sh -p ${use_parallel} -q ${mapq} -s ${input_size} ${polish_cprops} ${polish_mnd}
 	polish_asm=`basename ${polish_cprops} .cprops`.asm
+
+  mkdir hfiles_polish
+  mv h.*.txt hfiles_polish/
+  mv h.*.txt.original hfiles_polish/
 
 #	7) Visualize output
 	bash ${pipeline}/visualize/run-asm-visualizer.sh -p ${use_parallel} -q ${mapq} -i -c ${polish_cprops} ${polish_asm} ${polish_mnd}
