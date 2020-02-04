@@ -226,10 +226,10 @@ basenamefile="$(basename $contigPropFile .cprops)"
 awk -f $concat_scaffolds_script "h.scaffolds.original.notation.step.""$STEP"".txt" > "$basenamefile"".asm"
 
 echo '[DBG] considered scaffolds ----'
-find . -name 'h.dropouts.step.*.txt'
+find . -maxdepth 1 -name 'h.dropouts.step.*.txt'
 echo '[DBG] ----'
 
-for i in $(find . -name 'h.dropouts.step.*.txt' | sort -t "." -nr -k 5); do
+for i in $(find . -maxdepth 1 -name 'h.dropouts.step.*.txt' | sort -t "." -nr -k 5); do
     cat $i >> "$basenamefile"".asm"
 done
 
