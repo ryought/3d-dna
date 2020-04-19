@@ -1,11 +1,22 @@
-# concatenate all scaffolds
+# concatenate all scaffolds (composed of >1 contigs)
 {
-  if (all) {
-    all=all" "$0
+  if (NF > 1) {
+    # append to A
+    if (A) {
+      A=A" "$0
+    } else {
+      A=$0
+    }
   } else {
-    all=$0
+    # append to B
+    if (B) {
+      B=B"\n"$0
+    } else {
+      B=$0
+    }
   }
 }
 END {
-  print all
+  print A
+  print B
 }
