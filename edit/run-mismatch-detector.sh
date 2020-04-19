@@ -187,6 +187,7 @@ dep_size=${bin_size}
 bin_size=${narrow_bin_size}
 dep_size=$(( dep_size / bin_size * bin_size )) # in case any rounding issues
 echo "...Dumping ${bin_size} resolution matrix"
+echo "[debug] loading from ${hic_file}"
 bash ${juicebox} dump observed NONE ${hic_file} assembly assembly BP ${bin_size} h.hic_dump.${bin_size}.txt
 [ $? -ne 0 ] && echo >&2 ":( Juicebox dump is empty! Perhaps something is wrong with the hic file or the requested resolution is too high. Exiting!" && exit 1
 

@@ -631,8 +631,8 @@ orig_cprops=${genomeid}.cprops
 ##	calculate zoom
 # TODO: move this to mismatch detector, pass only scale
 totlength=`awk '{total+=$3}END{print total}' ${orig_cprops}`
-# scale=$(( 1 + $totlength / 2100000000 ))
-scale=1
+scale=$(( 1 + $totlength / 2100000000 ))
+# scale to avoid IntMax=2147483648.
 echo "setting scale to be $scale"
 if [ $scale -ne 1 ]; then
 	editor_coarse_resolution=$((editor_coarse_resolution/scale))

@@ -147,9 +147,11 @@ fi
 ## Handle default zoom if not specified
 
 if [ -z $scale ]; then
-	# calculate necessary zoom
-        totlength=`awk 'FILENAME==ARGV[1]{len[$2]=$3;len[-$2]=$3;next}{for(i=1;i<=NF;i++){total+=len[$i]}}END{print total}' ${cprops} ${asm}`
-	scale=$(( 1 + $totlength / 2100000000 ))
+  # calculate necessary zoom
+  totlength=`awk '{total+=$3}END{print total}' ${cprops}`
+  # totlength=`awk 'FILENAME==ARGV[1]{len[$2]=$3;len[-$2]=$3;next}{for(i=1;i<=NF;i++){total+=len[$i]}}END{print total}' ${cprops} ${asm}`
+  scale=$(( 1 + $totlength / 2100000000 ))
+  echo "[visualize/run-asm-visualizer.sh] scale is $scale"
 fi
 
 genomeid="`basename $asm .asm`"

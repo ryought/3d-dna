@@ -144,7 +144,8 @@ fi
 
 if [ -z $scale ]; then
 	# calculate necessary zoom
-	totlength=`awk '$0~/^>/{len[$2]=$3;len[-$2]=$3;next}{for(i=1;i<=NF;i++){total+=len[$i]}}END{print total}' ${assembly}`
+	# totlength=`awk '$0~/^>/{len[$2]=$3;len[-$2]=$3;next}{for(i=1;i<=NF;i++){total+=len[$i]}}END{print total}' ${assembly}`
+	totlength=`awk '$0~/^>/{total+=$3;next}END{print total}' ${assembly}`  # consider all the contigs
 	scale=$(( 1 + $totlength / 2100000000 ))
 fi
 
