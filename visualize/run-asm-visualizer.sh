@@ -191,7 +191,7 @@ do
     add_options=$add_options","$(( res[$i]/scale ))
 done
 
-#[ ${scale} -ne 1 ] && add_options=${res[0]}","${add_options}
+[ ${scale} -ne 1 ] && add_options=${res[0]}","${add_options}
 
 add_options="-r "${add_options}
 
