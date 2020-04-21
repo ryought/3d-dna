@@ -2,19 +2,13 @@
 #### Written by: OD
 
 # gawk -v P0=-2.148477541013386  -v P1=-0.9848534664777571 -v K0=3162 -v K=75000 -f test.awk test.data
-function p_slow(d)
-{
-  if (d < K0) {
-    return P0 + (P1 * log(K0));
-  } else if (d > K) {
-    return P0 + (P1 * log(K));
-  } else {
-    return P0 + (P1 * log(d));
-  }
-}
 function p(d)
 {
-  return (d<K0) ? PK0 : ((d>K) ? PK : P0 + (P1 * log(d)))
+  # p(d) =
+  #     (d<K0) | PK0 - PK
+  #     (d>K)  | PK  - PK
+  # (otherwise)| P1 log(d) + P0 - PK
+  return (d<K0) ? PK0PK : ((d>K) ? 0 : P0PK + (P1 * log(d)))
 }
 function abs(value)
 {
@@ -23,6 +17,8 @@ function abs(value)
 BEGIN {
   PK  = P0 + (P1 * log(K))
   PK0 = P0 + (P1 * log(K0))
+  PK0PK = PK0 - PK
+  P0PK = P0 - PK
 }
 # read in the cprops
 {
@@ -77,42 +73,66 @@ BEGIN {
 		if (slist[$2] < slist[$6])
 		{
       # <--->
-      count[slist[$2]" "slist[$6]" "1] += 1
       dist = pos1 + pos2
-      prob[slist[$2]" "slist[$6]" "1] += p(dist)
+      pd = p(dist)
+      if (pd > 0) {
+        count[slist[$2]" "slist[$6]" "1] += 1
+        prob[slist[$2]" "slist[$6]" "1] += pd
+      }
 
       # <-<-
-      count[slist[$2]" "slist[$6]" "2] += 1
       dist = pos1 + slen2 - pos2
-      prob[slist[$2]" "slist[$6]" "2] += p(dist)
+      pd = p(dist)
+      if (pd > 0) {
+        count[slist[$2]" "slist[$6]" "2] += 1
+        prob[slist[$2]" "slist[$6]" "2] += pd
+      }
 
       # ->->
-      count[slist[$2]" "slist[$6]" "3] += 1
       dist = slen1 - pos1 + pos2
-      prob[slist[$2]" "slist[$6]" "3] += p(dist)
+      pd = p(dist)
+      if (pd > 0) {
+        count[slist[$2]" "slist[$6]" "3] += 1
+        prob[slist[$2]" "slist[$6]" "3] += pd
+      }
 
       # -><-
-      count[slist[$2]" "slist[$6]" "4] += 1
       dist = slen1 - pos1 + slen2 - pos2
-      prob[slist[$2]" "slist[$6]" "4] += p(dist)
+      pd = p(dist)
+      if (pd > 0) {
+        count[slist[$2]" "slist[$6]" "4] += 1
+        prob[slist[$2]" "slist[$6]" "4] += pd
+      }
 		}
 		else
 		{
-      count[slist[$6]" "slist[$2]" "1] += 1
       dist = pos2 + pos1
-      prob[slist[$6]" "slist[$2]" "1] += p(dist)
+      pd = p(dist)
+      if (pd > 0) {
+        count[slist[$6]" "slist[$2]" "1] += 1
+        prob[slist[$6]" "slist[$2]" "1] += pd
+      }
 
-      count[slist[$6]" "slist[$2]" "2] += 1
       dist = pos2 + slen1 - pos1
-      prob[slist[$6]" "slist[$2]" "2] += p(dist)
+      pd = p(dist)
+      if (pd > 0) {
+        count[slist[$6]" "slist[$2]" "2] += 1
+        prob[slist[$6]" "slist[$2]" "2] += pd
+      }
 
-      count[slist[$6]" "slist[$2]" "3] += 1
       dist = slen2 - pos2 + pos1
-      prob[slist[$6]" "slist[$2]" "3] += p(dist)
+      pd = p(dist)
+      if (pd > 0) {
+        count[slist[$6]" "slist[$2]" "3] += 1
+        prob[slist[$6]" "slist[$2]" "3] += pd
+      }
 
-      count[slist[$6]" "slist[$2]" "4] += 1
       dist = slen2 - pos2 + slen1 - pos1
-      prob[slist[$6]" "slist[$2]" "4] += p(dist)
+      pd = p(dist)
+      if (pd > 0) {
+        count[slist[$6]" "slist[$2]" "4] += 1
+        prob[slist[$6]" "slist[$2]" "4] += pd
+      }
 		}
 	}
 

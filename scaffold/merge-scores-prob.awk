@@ -36,7 +36,7 @@ BEGIN {
 {
 	if (($1!=prev1 || $2!=prev2 || $3!=prev3) && FNR!=1)
 	{
-		print prev1, prev2, prev3, score - (count * PK), count
+		print prev1, prev2, prev3, score, count
     score = 0
 		count = 0
 	}
@@ -47,6 +47,6 @@ BEGIN {
 END{
 	if (prev1)
 	{
-		print prev1, prev2, prev3, score - (count * PK), count
+		print prev1, prev2, prev3, score, count
 	}
 }

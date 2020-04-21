@@ -131,7 +131,7 @@ fi
 # python infer-distribution.py hoge.mnd 1000 100000
 K0=3500
 K=75000
-/work/ryought/tools/anaconda3/bin/python $infer_distribution_script $mergelib $K $K0 > param
+# /work/ryought/tools/anaconda3/bin/python $infer_distribution_script $mergelib $K $K0 > param
 P0=$(sed -n 1p param)
 P1=$(sed -n 2p param)
 
@@ -150,16 +150,16 @@ while true; do
 
     #extract, relable and count reads from merged-nodups [TODO: rethink this part once mnd is deprecated]
   # TODO modify the threshold
-  K=750000
+  K=100000
 	if [ $use_parallel == true ]; then
 		parallel -a $mergelib --will-cite --jobs 80% --pipepart --block 1G "gawk -v MAPQ=$MAPQ -v P0="$P0" -v P1="$P1" -v K="$K" -v K0="$K0" -f $scrape_contacts_script $contigPropFile h.scaffolds.original.notation.step.$(($STEP-1)).txt - " | LC_ALL=C sort -k1,1 -k2,2 -k3,3n -s | gawk -v P0="$P0" -v P1="$P1" -v K="$K" -v K0="$K0" -f ${merge_scores_script} $contigPropFile "h.scaffolds.original.notation.step.""$(($STEP-1))"".txt" - > "h.scores.step.""$STEP"".txt"
 	else
     echo 'running prob calcing'
 		gawk -v MAPQ="$MAPQ" -v P0="$P0" -v P1="$P1" -v K="$K" -v K0="$K0" -f $scrape_contacts_script $contigPropFile "h.scaffolds.original.notation.step.""$(($STEP-1))"".txt" "$mergelib" | gawk -v P0="$P0" -v P1="$P1" -v K="$K" -v K0="$K0" -f ${merge_scores_script} $contigPropFile "h.scaffolds.original.notation.step.""$(($STEP-1))"".txt" - > "h.scores.step.""$STEP"".txt"
 	fi
-    gawk -f ${make_scores_positive_script} "h.scores.step.""$STEP"".txt" "h.scores.step.""$STEP"".txt" > "h.scores.step.""$STEP"".positive.txt"
-    mv "h.scores.step.""$STEP"".txt" "h.scores.step.""$STEP"".txt.original"
-    mv "h.scores.step.""$STEP"".positive.txt" "h.scores.step.""$STEP"".txt"
+    # gawk -f ${make_scores_positive_script} "h.scores.step.""$STEP"".txt" "h.scores.step.""$STEP"".txt" > "h.scores.step.""$STEP"".positive.txt"
+    # mv "h.scores.step.""$STEP"".txt" "h.scores.step.""$STEP"".txt.original"
+    # mv "h.scores.step.""$STEP"".positive.txt" "h.scores.step.""$STEP"".txt"
 
     #consolidate scrape data into double-sorted-confidence file
     gawk -f $compute_confidences_script "h.scores.step.""$STEP"".txt" | sort -r -gk4 -gk5 -S8G --parallel=48 -s > "h.double.sorted.confidence.step.""$STEP"".txt"
