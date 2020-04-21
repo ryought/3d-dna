@@ -22,10 +22,11 @@ mapq=1				# minimal mapping quality
 k=55					# sensitivity to depletion score (50% of expected is labeled as a mismatch)
 pct=5					# default percent of map to saturate
 norm="KR"				# use an unbalanced contact matrix for analysis
+K=100000
 
 ## HANDLE OPTIONS
 
-while getopts "hs:j:a:b:w:n:d:k:c:b:p:q:" opt; do
+while getopts "hs:j:a:b:w:n:d:k:c:b:p:q:K:" opt; do
 case $opt in
     h) echo "$USAGE" >&1
         exit 0
@@ -120,6 +121,14 @@ if [[ $OPTARG =~ $re ]] && [[ ${OPTARG%.*} -ge 0 ]] && ! [[ "$OPTARG" =~ ^0*(\.)
     	else
     		echo ":( Unrecognized value for -b flag. Running with default parameters (-b NONE)." >&2
     	fi
+    ;;
+    K)  re='^[0-9]+$'
+        if [[ $OPTARG =~ $re ]]; then
+            K=$OPTARG
+            echo ":) -K flag was triggered, we set K=$K for liger-scaffolder" >&1
+        else
+            echo ":( Wrong syntax for K, fall-backing K=$K" >&2
+        fi
     ;;
     *) echo "$USAGE" >&2
         exit 1
@@ -230,7 +239,7 @@ mv h.dropouts.step.0.txt do_not_delete.dropouts.step.0.txt
 # mv ${polish_asm} h.scaffolds.original.notation.step.0.txt
 
 #	6) Run LIGer (for things TIGer was not able to join - not necessary, but for megascaffold consistency)
-	bash ${pipeline}/scaffold/run-liger-scaffolder.sh -p ${use_parallel} -q ${mapq} -s ${input_size} ${polish_cprops} ${polish_mnd}
+	bash ${pipeline}/scaffold/run-liger-scaffolder.sh -p ${use_parallel} -q ${mapq} -K $K -s ${input_size} ${polish_cprops} ${polish_mnd}
 	polish_asm=`basename ${polish_cprops} .cprops`.asm
 
   mkdir hfiles_polish

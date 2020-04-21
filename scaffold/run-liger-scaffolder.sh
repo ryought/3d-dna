@@ -6,7 +6,7 @@ USAGE="
 *****************************************************
 This is a wrapper for a Hi-C Limitless Iterative Greedy genome assembly (LIGer) algorithm, version date: Dec 7, 2016.
 
-Usage: ./run-liger-scaffolder.sh [-h] [-s minimal_scaffold_size] [-t link_threshold] [-q mapq] path_to_cprops_file path_to_merge_nodups_file
+Usage: ./run-liger-scaffolder.sh [-h] [-s minimal_scaffold_size] [-t link_threshold] [-q mapq] [-K probability_cutoff_threshold] path_to_cprops_file path_to_merge_nodups_file
 
 ARGUMENTS:
 path_to_cprops_file     Path to (prefiltered) cprops file listing contigs for which LIGer scaffolding will be attempted
@@ -18,6 +18,7 @@ OPTIONS:
 -q mapq                 Set threshold for Hi-C reads mapping quality (default is 1)
 -p true/false			Use GNU Parallel to speed up calculations (default is true)
 -t link_threshod      	Set threshold for joining links [not working yet, uses default]
+-K probability_cutoff_threshold      	prob-join module considers contacts in d<K region.
 
 Uses scrape-mnd.awk, generate-unsorted-confidence-table.awk, confidence-to-assembly.awk, scaffolds-to-original-notation.awk and drop-smallest-dubious-element.awk that should be in the same folder as the wrapper script.
 
@@ -31,12 +32,23 @@ Note that in the current version the input is expected in the cprops format.
 SIZE=15000
 MAPQ=1
 use_parallel=true
+K=100000
+K0=3500
 
 ## HANDLE OPTIONS
-while getopts "s:q:p:t:h" opt; do
+while getopts "s:q:p:t:h:K:" opt; do
 case $opt in
     h) echo "$USAGE" >&2
         exit 0
+    ;;
+    K)  re='^[0-9]+$'
+        if [[ $OPTARG =~ $re ]]; then
+            K0=3500
+            K=$OPTARG
+            echo ":) -K flag was triggered, we set K=$K, K0=$K0" >&1
+        else
+            echo ":( Wrong syntax for probability cutoff threshold K. Using default K=$K, K0=$K0" >&2
+        fi
     ;;
     s)  re='^[0-9]+$'
         if [[ $OPTARG =~ $re ]] && [[ $OPTARG -gt 0 ]]; then
@@ -129,9 +141,9 @@ else
 fi
 
 # python infer-distribution.py hoge.mnd 1000 100000
-K0=3500
-K=75000
-# /work/ryought/tools/anaconda3/bin/python $infer_distribution_script $mergelib $K $K0 > param
+K0_fitting=3500
+K_fitting=75000
+# /work/ryought/tools/anaconda3/bin/python $infer_distribution_script $mergelib $K_fitting $K0_fitting > param
 P0=$(sed -n 1p param)
 P1=$(sed -n 2p param)
 
@@ -150,7 +162,6 @@ while true; do
 
     #extract, relable and count reads from merged-nodups [TODO: rethink this part once mnd is deprecated]
   # TODO modify the threshold
-  K=100000
 	if [ $use_parallel == true ]; then
 		parallel -a $mergelib --will-cite --jobs 80% --pipepart --block 1G "gawk -v MAPQ=$MAPQ -v P0="$P0" -v P1="$P1" -v K="$K" -v K0="$K0" -f $scrape_contacts_script $contigPropFile h.scaffolds.original.notation.step.$(($STEP-1)).txt - " | LC_ALL=C sort -k1,1 -k2,2 -k3,3n -s | gawk -v P0="$P0" -v P1="$P1" -v K="$K" -v K0="$K0" -f ${merge_scores_script} $contigPropFile "h.scaffolds.original.notation.step.""$(($STEP-1))"".txt" - > "h.scores.step.""$STEP"".txt"
 	else

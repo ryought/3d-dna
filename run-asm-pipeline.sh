@@ -80,6 +80,7 @@ OPTIONS:
 ADDITIONAL OPTIONS:
 **scaffolder**
 -q|--mapq mapq					Mapq threshold for scaffolding and visualization (default is 1).
+-K probability cutoff threshold in bp 					prob-join module considers contacts in d<K region.
 
 **misjoin detector**
 --editor-coarse-resolution editor_coarse_resolution
@@ -161,6 +162,7 @@ input_size=15000 # contigs/scaffolds smaller than input_size are ignored
 MAX_ROUNDS=2	# use 2 for Hs2 and 9 for AaegL4
 
 mapq=1	# default read mapping quality threshold for Hi-C scaffolder
+K=100000
 
 # misassembly detector and editor default params
 editor_coarse_resolution=25000	
@@ -256,6 +258,16 @@ while :; do
 				mapq=$OPTARG
 			else
 				echo ":( Wrong syntax for mapping quality. Using the default value ${mapq}." >&2
+			fi
+        	shift
+        ;;
+    -K) OPTARG=$2
+			re='^[0-9]+$'
+			if [[ $OPTARG =~ $re ]]; then
+				K=$OPTARG
+				echo " -K flag was triggered, we set K=$K" >&1
+			else
+				echo ":( Wrong syntax for K. Using the default value ${K}." >&2
 			fi
         	shift
         ;;
@@ -677,7 +689,7 @@ if [ "$stage" != "polish" ] && [ "$stage" != "split" ] && [ "$stage" != "seal" ]
 		if !([ "$fast" == "true" ] && [ ${ROUND} -eq 0 ] ); then
         # scaffold
             echo "...starting round ${ROUND} of scaffolding:" >&1
-            bash ${pipeline}/scaffold/run-liger-scaffolder.sh -p ${parallel} -s ${input_size} -q ${mapq} ${current_cprops} ${current_mnd}
+            bash ${pipeline}/scaffold/run-liger-scaffolder.sh -p ${parallel} -s ${input_size} -q ${mapq} -K $K ${current_cprops} ${current_mnd}
             # save tmp files to hfiles folder
             mkdir "hfiles_${ROUND}"
             mv h.*.txt "hfiles_${ROUND}/"
@@ -767,7 +779,7 @@ if [ "$stage" != "split" ] && [ "$stage" != "seal" ] && [ "$stage" != "merge" ] 
 	echo "###############" >&1
 	echo "Starting polish:" >&1
 	
-bash ${pipeline}/polish/run-asm-polisher.sh -p ${parallel} -q ${mapq} -j ${genomeid}.resolved.hic -a ${genomeid}.resolved_asm.scaffold_track.txt -b ${genomeid}.resolved_asm.superscaf_track.txt -s ${polisher_input_size} -c ${polisher_saturation_centile} -w ${polisher_coarse_resolution} -d ${polisher_coarse_region} -k ${polisher_coarse_stringency} -n ${polisher_fine_resolution} ${genomeid}.cprops ${orig_mnd} ${genomeid}.resolved.cprops ${genomeid}.resolved.asm
+bash ${pipeline}/polish/run-asm-polisher.sh -p ${parallel} -q ${mapq} -K $K -j ${genomeid}.resolved.hic -a ${genomeid}.resolved_asm.scaffold_track.txt -b ${genomeid}.resolved_asm.superscaf_track.txt -s ${polisher_input_size} -c ${polisher_saturation_centile} -w ${polisher_coarse_resolution} -d ${polisher_coarse_region} -k ${polisher_coarse_stringency} -n ${polisher_fine_resolution} ${genomeid}.cprops ${orig_mnd} ${genomeid}.resolved.cprops ${genomeid}.resolved.asm
 	
 	mv ${genomeid}.resolved.polish.cprops ${genomeid}.polished.cprops
 	mv ${genomeid}.resolved.polish.asm ${genomeid}.polished.asm
