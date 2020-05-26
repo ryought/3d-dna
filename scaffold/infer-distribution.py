@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import dask.dataframe as ddf
+# import dask.dataframe as ddf  # enable if you want to make this procss fast
 import pandas as pd
 import time
 from sklearn.neighbors.kde import KernelDensity
@@ -51,14 +51,16 @@ def main():
     K0 = int(sys.argv[3])
 
     # print('parsing mnd by dask.dataframe.read_csv', time.time())
-    df = ddf.read_csv(
+    # df = ddf.read_csv(
+    df = pd.read_csv(
         mnd_filename,
         sep=' ',
         header=None,
         names=['N1', 'P1', 'N2', 'P2'],
         usecols=[1, 2, 5, 6],
         engine='c',
-    ).compute()
+        )
+    # ).compute()
     # reorder index
     # print('reset indexing', time.time())
     df = df.reset_index(drop=True)

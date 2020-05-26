@@ -143,7 +143,7 @@ fi
 # python infer-distribution.py hoge.mnd 1000 100000
 K0_fitting=3500
 K_fitting=75000
-# /work/ryought/tools/anaconda3/bin/python $infer_distribution_script $mergelib $K_fitting $K0_fitting > param
+python3 $infer_distribution_script $mergelib $K_fitting $K0_fitting > param
 P0=$(sed -n 1p param)
 P1=$(sed -n 2p param)
 
